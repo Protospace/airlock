@@ -101,3 +101,5 @@ ENV/
 # Editor
 *.swp
 *.swo
+
+card_data.json
