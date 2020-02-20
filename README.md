@@ -43,7 +43,7 @@ $ source env/bin/activate
 Start an empty card_data.json:
 
 ```text
-(env) $ echo "{}" > card-data.json
+(env) $ echo "{}" > card_data.json
 ```
 
 Now you can run the script to test:
