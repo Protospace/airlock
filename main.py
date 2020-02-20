@@ -5,12 +5,20 @@ logging.basicConfig(
 
 from multiprocessing import Process, Queue
 from queue import Empty
+import RPi.GPIO as GPIO
+import json
+import requests
+import serial
 import time
 
 RELAY_PIN = 17
 RFID_EN_PIN = 27
 CARDS_FILE = 'card_data.json'
 OPEN_DURATION = 4
+
+API_STATS = 'https://api.my.protospace.ca/stats/'
+API_DOOR = 'https://api.my.protospace.ca/door/'
+API_SEEN = lambda x: 'https://api.my.protospace.ca/door/{}/seen/'.format(x)
 
 ser = None
 
@@ -77,10 +85,53 @@ def reader_thread(card_data_queue):
 
         unlock_door()
 
-def update_thread(card_data_queue):
-    while True:
-        pass
+        try:
+            res = requests.post(API_SEEN(card), timeout=2)
+            res.raise_for_status()
+        except BaseException as e:
+            logging.error('Problem POSTing seen: {} - {}'.format(e.__class__.__name__, str(e)))
+            continue
 
+def update_thread(card_data_queue):
+    last_card_change = None
+
+    while True:
+        time.sleep(5)
+
+        try:
+            res = requests.get(API_STATS, timeout=5)
+            res.raise_for_status()
+            res = res.json()
+        except BaseException as e:
+            logging.error('Problem GETting stats: {} - {}'.format(e.__class__.__name__, str(e)))
+            continue
+
+        if res['last_card_change'] == last_card_change:
+            continue
+        last_card_change = res['last_card_change']
+
+        logging.info('Cards changed, pulling update from API')
+
+        try:
+            res = requests.get(API_DOOR, timeout=5)
+            res.raise_for_status()
+            res = res.json()
+        except BaseException as e:
+            logging.error('Problem GETting door: {} - {}'.format(e.__class__.__name__, str(e)))
+            continue
+
+        logging.info('Got {} cards from API'.format(str(len(res))))
+        card_data_queue.put(res)
+
+        logging.info('Writing data to file')
+        with open(CARDS_FILE, 'w') as f:
+            json.dump(res, f)
+
+def watchdog_thread():
+    while True:
+        with open('/dev/watchdog', 'w') as wdt:
+            wdt.write('1')
+        time.sleep(1)
 
 if __name__ == '__main__':
     logging.info('Initializing...')
