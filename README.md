@@ -40,7 +40,7 @@ $ source env/bin/activate
 (env) $ pip install -r requirements.txt
 ```
 
-Start an empty card-data.json:
+Start an empty card_data.json:
 
 ```text
 (env) $ echo "{}" > card-data.json
