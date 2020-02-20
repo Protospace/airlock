@@ -141,3 +141,4 @@ if __name__ == '__main__':
 
     Process(target=reader_thread, args=(card_data,)).start()
     Process(target=update_thread, args=(card_data,)).start()
+    Process(target=watchdog_thread).start()
