@@ -6,10 +6,13 @@ logging.basicConfig(
 from multiprocessing import Process, Queue
 from queue import Empty
 import RPi.GPIO as GPIO
+import os
 import json
 import requests
 import serial
 import time
+
+DEBUG = os.environ.get('DEBUG', False)
 
 RELAY_PIN = 17
 RFID_EN_PIN = 27
@@ -141,4 +144,4 @@ if __name__ == '__main__':
 
     Process(target=reader_thread, args=(card_data,)).start()
     Process(target=update_thread, args=(card_data,)).start()
-    Process(target=watchdog_thread).start()
+    if not DEBUG: Process(target=watchdog_thread).start()
