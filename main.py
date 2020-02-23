@@ -11,6 +11,7 @@ import json
 import requests
 import serial
 import time
+from signal import *
 
 DEBUG = os.environ.get('DEBUG', False)
 
@@ -24,6 +25,21 @@ API_DOOR = 'https://api.my.protospace.ca/door/'
 API_SEEN = lambda x: 'https://api.my.protospace.ca/door/{}/seen/'.format(x)
 
 ser = None
+
+def unlock_door():
+    GPIO.output(RELAY_PIN, GPIO.HIGH)
+    GPIO.output(RFID_EN_PIN, GPIO.HIGH)
+
+    time.sleep(OPEN_DURATION)
+
+    GPIO.output(RELAY_PIN, GPIO.LOW)
+    GPIO.output(RFID_EN_PIN, GPIO.LOW)
+
+def lock_door_on_exit(*args):
+    logging.info('Exiting, locking door...')
+    GPIO.output(RELAY_PIN, GPIO.LOW)
+    GPIO.output(RFID_EN_PIN, GPIO.LOW)
+    os._exit(0)
 
 def init():
     global ser, cards
@@ -39,14 +55,9 @@ def init():
     ser = serial.Serial(port='/dev/ttyAMA0', baudrate=2400, timeout=0.1)
     logging.info('Serial initialized')
 
-def unlock_door():
-    GPIO.output(RELAY_PIN, GPIO.HIGH)
-    GPIO.output(RFID_EN_PIN, GPIO.HIGH)
-
-    time.sleep(OPEN_DURATION)
-
-    GPIO.output(RELAY_PIN, GPIO.LOW)
-    GPIO.output(RFID_EN_PIN, GPIO.LOW)
+    for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
+        signal(sig, lock_door_on_exit)
+    logging.info('Signals initialized')
 
 def reader_thread(card_data_queue):
     recent_scans = {}
