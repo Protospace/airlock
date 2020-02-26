@@ -4,20 +4,21 @@ Door controller for scanning Protospace member cards on the front and back doors
 
 ## Setup
 
-Ensure Pi user has read permissions to /dev/ttyACM0.
+Ensure Pi user has read permissions to /dev/ttyACM0 (Pi user needs to be part of the dialout group).
 
 Install dependencies:
 
 ```text
 $ sudo apt update
-$ sudo apt install python3 python3-pip python-virtualenv python3-virtualenv
+$ sudo apt install python3 python3-pip python-virtualenv python3-virtualenv supervisor
 ```
 
 Clone this repo:
 
 ```text
 $ git clone https://github.com/Protospace/airlock.git
-$ cd airlock
+$ sudo mv airlock/ /opt/
+$ cd /opt/airlock
 ```
 
 ### Watchdog
@@ -49,7 +50,7 @@ Start an empty card_data.json:
 Now you can run the script to test:
 
 ```text
-(env) $ python main.py
+(env) $ DEBUG=true python main.py
 ```
 
 ## Process management
