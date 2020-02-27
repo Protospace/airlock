@@ -13,6 +13,8 @@ import serial
 import time
 from signal import *
 
+import secrets
+
 DEBUG = os.environ.get('DEBUG', False)
 
 RELAY_PIN = 17
@@ -127,11 +129,13 @@ def update_thread(card_data_queue):
         logging.info('Cards changed, pulling update from API')
 
         try:
-            res = requests.get(API_DOOR, timeout=5)
+            headers = {'Authorization': 'Bearer ' + secrets.DOOR_API_KEY}
+            res = requests.get(API_DOOR, headers=headers, timeout=5)
             res.raise_for_status()
             res = res.json()
         except BaseException as e:
             logging.error('Problem GETting door: {} - {}'.format(e.__class__.__name__, str(e)))
+            last_card_change = None
             continue
 
         logging.info('Got {} cards from API'.format(str(len(res))))
