@@ -64,6 +64,7 @@ Configure `/etc/supervisor/conf.d/airlock.conf`:
 user=pi
 directory=/opt/airlock
 command=/opt/airlock/env/bin/python -u main.py
+stopasgroup=true
 stopsignal=INT
 autostart=true
 autorestart=true
