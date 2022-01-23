@@ -77,7 +77,11 @@ def reader_thread(card_data_queue):
         card = ser.readline()
         if not card: continue
 
-        card = card.decode().strip()
+        try:
+            card = card.decode().strip()
+        except UnicodeDecodeError:
+            continue
+
         if len(card) != 10: continue
 
         # debounce card scans
