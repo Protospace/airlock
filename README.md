@@ -4,13 +4,11 @@ Door controller for scanning Protospace member cards on the front and back doors
 
 ## Setup
 
-Ensure Pi user has read permissions to /dev/ttyACM0 (Pi user needs to be part of the dialout group).
-
 Install dependencies:
 
 ```text
 $ sudo apt update
-$ sudo apt install python3 python3-pip python-virtualenv python3-virtualenv supervisor
+$ sudo apt install python3 python3-pip python3-virtualenv supervisor git
 ```
 
 Clone this repo:
@@ -21,14 +19,25 @@ $ sudo mv airlock/ /opt/
 $ cd /opt/airlock
 ```
 
-### Watchdog
+### Hardware Access
 
-For the watchdog to work, we need write access to `/dev/watchdog/`.
+Ensure Pi user has read permissions to `/dev/ttyACA0` and `/dev/watchdog`.
 
-Configure `/etc/udev/rules.d/60-watchdog.rules`:
+Configure `/etc/udev/rules.d/local.rules`:
 
 ```text
+ACTION=="add", KERNEL=="dialout", MODE="0666"
+ACTION=="add", KERNEL=="ttyACM0", MODE="0666"
+ACTION=="add", KERNEL=="ttyAMA0", MODE="0666"
 KERNEL=="watchdog", MODE="0666"
+```
+
+Also ensure `/boot/cmdline.txt` doesn't contain `console=serial0,115200`.
+
+Then reboot:
+
+```text
+$ sudo reboot
 ```
 
 ### Main Script
@@ -51,6 +60,13 @@ Now you can run the script to test:
 
 ```text
 (env) $ DEBUG=true python main.py
+```
+
+Copy and edit the settings file:
+
+```text
+(env) $ cp secrets.py.example secrets.py
+(env) $ vim secrets.py
 ```
 
 ## Process management
