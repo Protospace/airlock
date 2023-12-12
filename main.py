@@ -28,9 +28,15 @@ API_SEEN = lambda x: 'https://api.my.protospace.ca/door/{}/seen/'.format(x)
 
 ser = None
 
-def unlock_door():
+def unlock_door(card):
     GPIO.output(RELAY_PIN, GPIO.HIGH)
     GPIO.output(RFID_EN_PIN, GPIO.HIGH)
+
+    try:
+        res = requests.post(API_SEEN(card), timeout=4)
+        res.raise_for_status()
+    except BaseException as e:
+        logging.error('Problem POSTing seen: {} - {}'.format(e.__class__.__name__, str(e)))
 
     time.sleep(OPEN_DURATION)
 
@@ -103,14 +109,7 @@ def reader_thread(card_data_queue):
             card, card_data[card],
         ))
 
-        unlock_door()
-
-        try:
-            res = requests.post(API_SEEN(card), timeout=2)
-            res.raise_for_status()
-        except BaseException as e:
-            logging.error('Problem POSTing seen: {} - {}'.format(e.__class__.__name__, str(e)))
-            continue
+        unlock_door(card)
 
 def update_thread(card_data_queue):
     last_card_change = None
