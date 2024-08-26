@@ -33,7 +33,8 @@ def unlock_door(card):
     GPIO.output(RFID_EN_PIN, GPIO.HIGH)
 
     try:
-        res = requests.post(API_SEEN(card), timeout=4)
+        headers = {'Authorization': 'Bearer ' + secrets.DOOR_API_KEY}
+        res = requests.post(API_SEEN(card), headers=headers, timeout=4)
         res.raise_for_status()
     except BaseException as e:
         logging.error('Problem POSTing seen: {} - {}'.format(e.__class__.__name__, str(e)))
